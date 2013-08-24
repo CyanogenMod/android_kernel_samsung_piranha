@@ -43,6 +43,8 @@
 #include <linux/touchscreen/melfas.h>
 #include "../../../arch/arm/mach-omap2/sec_common.h"
 
+#include "../keyboard/cypress-touchkey.h"
+
 #ifdef CONFIG_SEC_TSP_FACTORY_TEST
 #define TSP_VENDOR			"MELFAS"
 #define TSP_IC				"MMS-144"
@@ -1228,6 +1230,9 @@ static irqreturn_t ts_irq_handler(int irq, void *handle)
 		return IRQ_HANDLED;
 	}
 #endif
+	
+	int flag = 0;
+	
 	for (i = 0; i < event_packet_size; i += TS_DATA_LEN) {
 		id = (buf[i] & 0x0F) - 1;
 		x = (buf[i + 1] & 0x0F) << 8 | buf[i + 2];
@@ -1293,9 +1298,12 @@ static irqreturn_t ts_irq_handler(int irq, void *handle)
 #if TRACKING_COORD
 			pr_info("tsp: finger %d move (%d, %d)\n", id, x, y);
 #endif
+			flag++;
 		}
 	}
 
+	touchscreen_state_report(flag ? 1 : 0);
+	
 	return IRQ_HANDLED;
 }
 
