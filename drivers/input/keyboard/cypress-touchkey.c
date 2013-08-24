@@ -37,13 +37,15 @@
 #include <linux/input/cypress-touchkey.h>
 #include <linux/slab.h>
 #include <linux/wait.h>
+#include <linux/earlysuspend.h>
+#include <linux/firmware.h>
 #include <linux/workqueue.h>
 
 #include "../../../arch/arm/mach-omap2/sec_common.h"
 
 #define DEVICE_NAME "sec_touchkey"
 #define I2C_M_WR 0      /* for i2c */
-#define FW_SIZE 8192
+#define FW_SIZE     8192
 
 /*
  * Cypress touchkey register
