@@ -69,7 +69,7 @@
 
 struct cptk_data *cptk_local;
 struct timer_list touch_led_timer;
-int touch_led_timeout = 3; // timeout for the touchkey backlight in secs
+int touch_led_timeout = 1.5; // timeout for the touchkey backlight in secs
 
 enum touch_led_modes {
     MODE_OFF,
@@ -77,7 +77,7 @@ enum touch_led_modes {
     MODE_TS
 };
 
-int touch_led_mode = MODE_TS;
+int touch_led_mode = MODE_KEY;
 
 static void touchkey_enable(struct cptk_data *cptk);
 static void touchkey_disable(struct cptk_data *cptk);
@@ -596,7 +596,19 @@ static ssize_t touch_led_mode_store(struct device *dev,
 static DEVICE_ATTR(led_mode, S_IRUGO | S_IWUSR | S_IWGRP,
         touch_led_mode_show, touch_led_mode_store);
 
-static ssize_t touch_led_notification(struct device *dev,
+static ssize_t touch_led_notification_show(struct device *dev,
+        struct device_attribute *attr, char *buf)
+{
+    struct cptk_data *cptk = dev_get_drvdata(dev);
+    int ret;
+
+    ret = sprintf(buf, "%d\n", cptk->notification);
+    pr_info("cptk: %s: notification=%d\n", __func__, cptk->notification);
+
+    return ret;
+}
+
+static ssize_t touch_led_notification_store(struct device *dev,
         struct device_attribute *attr, const char *buf,
         size_t size)
 {
@@ -623,7 +635,7 @@ static ssize_t touch_led_notification(struct device *dev,
     return size;
 }
 static DEVICE_ATTR(notification, S_IRUGO | S_IWUSR | S_IWGRP,
-        NULL, touch_led_notification);
+        touch_led_notification_show, touch_led_notification_store);
 
 static ssize_t touch_led_set_timeout(struct device *dev,
         struct device_attribute *attr, const char *buf,
