@@ -108,7 +108,11 @@ u8 calc_voltage_table(struct str_smart_dim *smart, const u8 * mtp);
 
 #ifdef CONFIG_AID_DIMMING
 u32 calc_gamma_table(struct str_smart_dim *smart,
-		     u32 gv, u8 result[], u8 gamma_curve);
+		     u32 gv, u8 result[], u8 gamma_curve
+#ifdef CONFIG_COLOR_HACK
+			 , int *hacky_v1_offset , u32 *color_adj
+#endif
+			 );
 u32 calc_gamma_table_215_190(struct str_smart_dim *smart, u32 gv, u8 result[]);
 #else
 u32 calc_gamma_table(struct str_smart_dim *smart, u32 gv, u8 result[]);

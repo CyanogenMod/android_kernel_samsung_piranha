@@ -556,11 +556,18 @@ static u32 calc_v255_reg(int ci, u32 dv[CI_MAX][IV_MAX])
 
 #ifdef CONFIG_AID_DIMMING
 u32 calc_gamma_table(struct str_smart_dim *smart,
-		     u32 gv, u8 result[], u8 gamma_curve)
+		     u32 gv, u8 result[], u8 gamma_curve
+#ifdef CONFIG_COLOR_HACK
+			 , int *hacky_v1_offset , u32 *color_adj
+#endif
+			 )
 {
 	u32 i, c;
 	u32 temp;
 	u32 lidx;
+#ifdef CONFIG_COLOR_HACK
+	u32 gv_temp;
+#endif
 	u32 dv[CI_MAX][IV_MAX];
 	s16 gamma[CI_MAX][IV_MAX];
 	u16 offset;
@@ -569,24 +576,43 @@ u32 calc_gamma_table(struct str_smart_dim *smart,
 		    calc_v15_reg,
 		    calc_v35_reg,
 		    calc_v59_reg, calc_v87_reg, calc_v171_reg, calc_v255_reg,};
-
+	printk(KERN_ERR "calc_gamma_table is running----ljzyal");
 	memset(gamma, 0, sizeof(gamma));
 
 	for (c = CI_RED; c < CI_MAX; c++)
 		dv[c][IV_1] = smart->ve[AD_IV1].v[c];
 
 	for (i = IV_15; i < IV_MAX; i++) {
+#ifdef CONFIG_COLOR_HACK
+		for (c = CI_RED; c < CI_MAX; c++) {
+			printk(KERN_ERR "gv_temp is running----ljzyal");
+			gv_temp = (color_adj[c]*gv)/100000;
+			temp = (smart->gamma_table[gamma_curve][dv_value[i]]
+				* gv_temp) / 1000;
+			lidx = lookup_vtbl_idx(smart, temp);
+			dv[c][i] = smart->ve[lidx].v[c];
+			printk(KERN_ERR "gv_temp is end----ljzyal");
+		}
+#else
 		temp = (smart->gamma_table[gamma_curve][dv_value[i]]
 			* gv) / 1000;
 		lidx = lookup_vtbl_idx(smart, temp);
 		for (c = CI_RED; c < CI_MAX; c++)
 			dv[c][i] = smart->ve[lidx].v[c];
+#endif
 	}
 
 	/* for IV1 does not calculate value */
 	/* just use default gamma value (IV1) */
-	for (c = CI_RED; c < CI_MAX; c++)
+	for (c = CI_RED; c < CI_MAX; c++) {
+#ifdef CONFIG_COLOR_HACK
+		gamma[c][IV_1] = smart->default_gamma[c] + ((hacky_v1_offset[c] * (int)smart->default_gamma[c]) / 100);
+		if (gamma[c][IV_1] > 140)
+			gamma[c][IV_1] = 140;
+#else
 		gamma[c][IV_1] = smart->default_gamma[c];
+#endif
+	}
 
 	for (i = IV_15; i < IV_MAX; i++) {
 		for (c = CI_RED; c < CI_MAX; c++)
@@ -604,7 +630,7 @@ u32 calc_gamma_table(struct str_smart_dim *smart,
 		for (i = IV_1; i < IV_255; i++)
 			result[(CI_MAX * i) + c] = gamma[c][i];
 	}
-
+	printk(KERN_ERR "calc_gamma_table is end----ljzyal");
 	return 0;
 }
 
