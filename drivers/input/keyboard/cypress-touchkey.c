@@ -81,7 +81,7 @@
 #ifdef CONFIG_KEY_NOTIFICATION
 struct cptk_data *cptk_local;
 struct timer_list touch_led_timer;
-int touch_led_timeout = 3; // timeout for the touchkey backlight in secs
+int touch_led_timeout = 1.5; // timeout for the touchkey backlight in secs
 
 enum touch_led_modes {
     MODE_OFF,
@@ -89,7 +89,7 @@ enum touch_led_modes {
     MODE_TS
 };
 
-int touch_led_mode = MODE_TS;
+int touch_led_mode = MODE_KEY;
 
 static void touchkey_enable(struct cptk_data *cptk);
 static void touchkey_disable(struct cptk_data *cptk);
