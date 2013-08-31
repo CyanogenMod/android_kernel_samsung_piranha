@@ -581,6 +581,14 @@ config KEYPAD_CYPRESS_20234
 		To compile this driver as a module, choose M here: the
 		module will be called cypress-touchkey.
 
+config KEY_NOTIFICATION
+	tristate "Use touchkey as notification light"
+	depends on KEYPAD_CYPRESS_20234
+	default y
+	help
+		Say Y here if you want to use touchkey 
+		as notification light.
+
 config KEYBOARD_SEC_DOCK
 	tristate "SEC P series dock keyboard support"
 	default n

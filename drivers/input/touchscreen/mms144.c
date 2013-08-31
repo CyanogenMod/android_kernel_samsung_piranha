@@ -43,7 +43,9 @@
 #include <linux/touchscreen/melfas.h>
 #include "../../../arch/arm/mach-omap2/sec_common.h"
 
+#ifdef CONFIG_KEY_NOTIFICATION
 #include "../keyboard/cypress-touchkey.h"
+#endif
 
 #ifdef CONFIG_SEC_TSP_FACTORY_TEST
 #define TSP_VENDOR			"MELFAS"
@@ -1301,9 +1303,9 @@ static irqreturn_t ts_irq_handler(int irq, void *handle)
 			flag++;
 		}
 	}
-
+#ifdef CONFIG_KEY_NOTIFICATION
 	touchscreen_state_report(flag ? 1 : 0);
-	
+#endif
 	return IRQ_HANDLED;
 }
 
