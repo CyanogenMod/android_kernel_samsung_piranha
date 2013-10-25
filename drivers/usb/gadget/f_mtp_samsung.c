@@ -929,7 +929,7 @@ static long  mtpg_ioctl(struct file *fd, unsigned int code, unsigned long arg)
 	case MTP_WRITE_INT_DATA:
 		/*printk(KERN_INFO "[%s]\t%d MTP slep1  intrpt_Write\n",
 						__func__, __LINE__);*/
-		msleep(1);
+		usleep_range(1000, 1100);
 		ret_value = interrupt_write(fd, (const char *)arg,
 					MTP_MAX_PACKET_LEN_FROM_APP);
 		if (ret_value < 0) {

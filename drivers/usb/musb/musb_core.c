@@ -749,7 +749,7 @@ b_host:
 #endif	/* CONFIG_USB_MUSB_HDRC_HCD */
 
 	if ((int_usb & MUSB_INTR_DISCONNECT) && !musb->ignore_disconnect) {
-		printk("DISCONNECT (%s) as %s, devctl %02x\n",
+		dev_dbg(musb->controller, "DISCONNECT (%s) as %s, devctl %02x\n",
 				otg_state_string(musb->xceiv->state),
 				MUSB_MODE(musb), devctl);
 		handled = IRQ_HANDLED;

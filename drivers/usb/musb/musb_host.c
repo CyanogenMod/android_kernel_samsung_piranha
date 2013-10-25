@@ -2226,7 +2226,10 @@ musb_h_disable(struct usb_hcd *hcd, struct usb_host_endpoint *hep)
 	qh->is_ready = 0;
 	if (musb_ep_get_qh(qh->hw_ep, is_in) == qh) {
 		urb = next_urb(qh);
-
+                   if (urb == NULL) {
+                     printk("!!!!! urb is NULL !!!!!\n");
+                     goto exit;
+                   }
 		/* make software (then hardware) stop ASAP */
 		if (!urb->unlinked)
 			urb->status = -ESHUTDOWN;
