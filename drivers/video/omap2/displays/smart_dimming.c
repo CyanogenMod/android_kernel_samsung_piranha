@@ -576,7 +576,7 @@ u32 calc_gamma_table(struct str_smart_dim *smart,
 		    calc_v15_reg,
 		    calc_v35_reg,
 		    calc_v59_reg, calc_v87_reg, calc_v171_reg, calc_v255_reg,};
-	printk(KERN_ERR "calc_gamma_table is running----ljzyal");
+	//printk(KERN_ERR "calc_gamma_table is running----ljzyal");
 	memset(gamma, 0, sizeof(gamma));
 
 	for (c = CI_RED; c < CI_MAX; c++)
@@ -585,13 +585,13 @@ u32 calc_gamma_table(struct str_smart_dim *smart,
 	for (i = IV_15; i < IV_MAX; i++) {
 #ifdef CONFIG_COLOR_HACK
 		for (c = CI_RED; c < CI_MAX; c++) {
-			printk(KERN_ERR "gv_temp is running----ljzyal");
+			//printk(KERN_ERR "gv_temp is running----ljzyal");
 			gv_temp = (color_adj[c]*gv)/100000;
 			temp = (smart->gamma_table[gamma_curve][dv_value[i]]
 				* gv_temp) / 1000;
 			lidx = lookup_vtbl_idx(smart, temp);
 			dv[c][i] = smart->ve[lidx].v[c];
-			printk(KERN_ERR "gv_temp is end----ljzyal");
+			//printk(KERN_ERR "gv_temp is end----ljzyal");
 		}
 #else
 		temp = (smart->gamma_table[gamma_curve][dv_value[i]]
@@ -630,7 +630,7 @@ u32 calc_gamma_table(struct str_smart_dim *smart,
 		for (i = IV_1; i < IV_255; i++)
 			result[(CI_MAX * i) + c] = gamma[c][i];
 	}
-	printk(KERN_ERR "calc_gamma_table is end----ljzyal");
+	//printk(KERN_ERR "calc_gamma_table is end----ljzyal");
 	return 0;
 }
 

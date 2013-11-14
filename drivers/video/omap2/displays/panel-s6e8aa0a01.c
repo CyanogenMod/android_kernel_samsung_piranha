@@ -829,9 +829,9 @@ static int s6e8aa0a01_gamma_ctl(struct s6e8aa0a01_data *lcd, int force)
 	struct omap_dss_device *dssdev = lcd->dssdev;
 	
 #ifdef CONFIG_COLOR_HACK
-	printk(KERN_ERR "s6e8aa0a01_adj_gamma_table is running----ljzyal");
+	//printk(KERN_ERR "s6e8aa0a01_adj_gamma_table is running----ljzyal");
 	s6e8aa0a01_adj_gamma_table(lcd);
-	printk(KERN_ERR "s6e8aa0a01_adj_gamma_table is end----ljzyal");
+	//printk(KERN_ERR "s6e8aa0a01_adj_gamma_table is end----ljzyal");
 #endif
 	
 	s6e8aa0a01_write_block_nosync(dssdev,
@@ -914,11 +914,11 @@ static int s6e8aa0a01_update_brightness(struct omap_dss_device *dssdev,
 
 	if ((force) || ((lcd->enabled) && (lcd->current_bl != lcd->bl))) {
 
-		printk(KERN_ERR "s6e8aa0a01_gamma_ctl is running----ljzyal");
+		//printk(KERN_ERR "s6e8aa0a01_gamma_ctl is running----ljzyal");
 
 		s6e8aa0a01_gamma_ctl(lcd, force);
 
-		printk(KERN_ERR "s6e8aa0a01_gamma_ctl is end----ljzyal");
+		//printk(KERN_ERR "s6e8aa0a01_gamma_ctl is end----ljzyal");
 
 		s6e8aa0a01_set_acl(lcd);
 
@@ -938,11 +938,11 @@ void ColorGammaUpdate(void)
 {
 
     if (lcd_->state == OMAP_DSS_DISPLAY_ACTIVE) {
-		printk(KERN_ERR "ColorGammaUpdate is running----ljzyal");
+		//printk(KERN_ERR "ColorGammaUpdate is running----ljzyal");
 		dsi_bus_lock(lcd_);
         s6e8aa0a01_update_brightness(lcd_, 1);
         dsi_bus_unlock(lcd_);
-		printk(KERN_ERR "ColorGammaUpdate end-----ljzyal");
+		//printk(KERN_ERR "ColorGammaUpdate end-----ljzyal");
     }
 
 }
