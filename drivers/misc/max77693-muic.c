@@ -1058,6 +1058,68 @@ void max77693_muic_shutdown(struct device *dev)
 	}
 }
 
+extern unsigned char ftm_sleep;
+static int max77693_muic_suspend(struct platform_device *dev, pm_message_t state)
+{
+	struct max77693_muic_info *info;
+
+	if(ftm_sleep)//only mask the INT when do SMD sleep test(AT+SYSSLEEP=0,0), this is to fix max77693 error INT report when use factory JIG.
+	{
+		u8 intmask1_val, intmask2_val;
+		info = platform_get_drvdata(dev);
+		
+		dev_info(info->dev, "func:%s, it should run only in AT_SYSSLEEP=0,0 mode\n", __func__);
+
+		if (!info->muic) 
+		{
+			dev_err(info->dev, "%s: no muic i2c client\n", __func__);
+			return -1;
+		}
+
+		intmask1_val = (0 << 0);
+		max77693_update_reg(info->muic, MAX77693_MUIC_REG_INTMASK1,
+				intmask1_val,
+				0x1);
+	
+		intmask2_val =  (0 << 0);
+		max77693_update_reg(info->muic, MAX77693_MUIC_REG_INTMASK2,
+				intmask2_val,
+				0x1); 
+
+	}
+	return 0;
+}
+
+static int max77693_muic_resume(struct platform_device *dev)
+{
+	struct max77693_muic_info *info;
+
+	if(ftm_sleep)// unmask the INT after SMD sleep test(AT+SYSSLEEP=0,0) this is to fix max77693 error INT report when use factory JIG. 
+	{
+		u8 intmask1_val, intmask2_val;
+		info = platform_get_drvdata(dev);
+		
+		dev_info(info->dev, "func:%s, it should run only in AT_SYSSLEEP=0,0 mode\n", __func__);
+
+		if (!info->muic) 
+		{
+			dev_err(info->dev, "%s: no muic i2c client\n", __func__);
+			return -1;
+		}
+
+		intmask1_val = (1 << 0);
+		max77693_update_reg(info->muic, MAX77693_MUIC_REG_INTMASK1,
+				intmask1_val,
+				0x1);
+		
+		intmask2_val =  (1 << 0);
+		max77693_update_reg(info->muic, MAX77693_MUIC_REG_INTMASK2,
+				intmask2_val,
+				0x1); 
+	}
+	return 0;
+}
+
 static struct platform_driver max77693_muic_driver = {
 	.driver		= {
 		.name	= "max77693-muic",
@@ -1066,6 +1128,8 @@ static struct platform_driver max77693_muic_driver = {
 	},
 	.probe		= max77693_muic_probe,
 	.remove		= __devexit_p(max77693_muic_remove),
+	.suspend = max77693_muic_suspend,
+	.resume = max77693_muic_resume,
 };
 
 static int __init max77693_muic_init(void)

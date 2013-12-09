@@ -19,6 +19,11 @@ config TARGET_LOCALE_CHN
 	bool "Samsung Espresso CHINA LOCALE"
 	default n
 	select MACH_OMAP4_SAMSUNG
+			
+config TARGET_LOCALE_CHN_HKTW
+	bool "Samsung Espresso CHINA HKTW LOCALE"
+	default n
+	select MACH_OMAP4_SAMSUNG
 
 config MACH_SAMSUNG_T1_CHN_CMCC
 	bool "Samsung T1 CHINA CMCC Board"
