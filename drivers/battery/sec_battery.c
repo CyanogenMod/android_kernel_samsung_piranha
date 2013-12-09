@@ -1298,13 +1298,41 @@ static void sec_bat_get_battery_info(
 			POWER_SUPPLY_PROP_TEMP, &value);
 		psy_do_property("sec-fuelgauge", set,
 			POWER_SUPPLY_PROP_TEMP, value);
+#if defined(CONFIG_TARGET_LOCALE_CHN) || defined(CONFIG_TARGET_LOCALE_CHN_HKTW)
+		if (value.intval - battery->temperature > 150) {
+			if (battery->abnormal_temperature == true) {
+				battery->temperature = value.intval;
+				battery->abnormal_temperature = false;
+			} else {
+				battery->abnormal_temperature = true;
+			}
+		} else {
+			battery->temperature = value.intval;
+			battery->abnormal_temperature = false;
+		}
+#else
 		battery->temperature = value.intval;
+#endif
 
 		sec_bat_get_temperature_by_adc(battery,
 			POWER_SUPPLY_PROP_TEMP_AMBIENT, &value);
 		psy_do_property("sec-fuelgauge", set,
 			POWER_SUPPLY_PROP_TEMP_AMBIENT, value);
+#if defined(CONFIG_TARGET_LOCALE_CHN) || defined(CONFIG_TARGET_LOCALE_CHN_HKTW)
+		if (value.intval - battery->temper_amb > 100) {
+			if (battery->abnormal_temperature_amb == true) {
+				battery->temper_amb = value.intval;
+				battery->abnormal_temperature_amb = false;
+			} else {
+				battery->abnormal_temperature_amb = true;
+			}
+		} else {
+			battery->temper_amb = value.intval;
+			battery->abnormal_temperature_amb = false;
+		}
+#else
 		battery->temper_amb = value.intval;
+#endif
 		break;
 	default:
 		break;
@@ -2337,6 +2365,14 @@ static int __devinit sec_battery_probe(struct platform_device *pdev)
 	battery->charging_start_time = 0;
 	battery->charging_passed_time = 0;
 	battery->charging_next_time = 0;
+
+#if defined(CONFIG_TARGET_LOCALE_CHN) || defined(CONFIG_TARGET_LOCALE_CHN_HKTW)
+	battery->temp_high_cnt = 0;
+	battery->temp_low_cnt = 0;
+	battery->temp_recover_cnt = 0;
+	battery->abnormal_temperature = false;
+	battery->abnormal_temperature_amb = false;
+#endif
 
 	alarm_init(&battery->event_termination_alarm,
 			ANDROID_ALARM_ELAPSED_REALTIME_WAKEUP,

@@ -21,7 +21,7 @@
  * software in any way with any other Broadcom software provided under a license
  * other than the GPL, without Broadcom's express prior written consent.
  *
- * $Id: bcmsdh_sdmmc.c 347640 2012-07-27 11:53:21Z $
+ * $Id: bcmsdh_sdmmc.c 362913 2012-10-15 11:26:11Z $
  */
 #include <typedefs.h>
 
@@ -62,12 +62,13 @@ extern int sdio_reset_comm(struct mmc_card *card);
 
 extern PBCMSDH_SDMMC_INSTANCE gInstance;
 
-uint sd_sdmode = SDIOH_MODE_SD4;	/* Use SD4 mode by default */
-#if defined(SDIO_F2_BLKSIZE)
-uint sd_f2_blocksize = SDIO_F2_BLKSIZE;
-#else
-uint sd_f2_blocksize = 512;		/* Default blocksize */
+#define DEFAULT_SDIO_F2_BLKSIZE		512
+#ifndef CUSTOM_SDIO_F2_BLKSIZE
+#define CUSTOM_SDIO_F2_BLKSIZE		DEFAULT_SDIO_F2_BLKSIZE
 #endif
+
+uint sd_sdmode = SDIOH_MODE_SD4;	/* Use SD4 mode by default */
+uint sd_f2_blocksize = CUSTOM_SDIO_F2_BLKSIZE;
 uint sd_divisor = 2;			/* Default 48MHz/2 = 24MHz */
 
 uint sd_power = 1;		/* Default to SD Slot powered ON */
@@ -524,7 +525,7 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
 		/* Now set it */
 		si->client_block_size[func] = blksize;
 
-#if defined(CUSTOMER_HW4) && defined(DYNAMIC_F2_BLKSIZE_OF_PROPTXSTATUS)
+#if defined(CUSTOMER_HW4) && defined(USE_DYNAMIC_F2_BLKSIZE)
 		if (gInstance == NULL || gInstance->func[func] == NULL) {
 			sd_err(("%s: SDIO Device not present\n", __FUNCTION__));
 			bcmerror = BCME_NORESOURCE;
@@ -537,7 +538,7 @@ sdioh_iovar_op(sdioh_info_t *si, const char *name,
 				blksize));
 		}
 		sdio_release_host(gInstance->func[func]);
-#endif /* CUSTOMER_HW4 && DYNAMIC_F2_BLKSIZE_OF_PROPTXSTATUS */
+#endif /* CUSTOMER_HW4 && USE_DYNAMIC_F2_BLKSIZE */
 		break;
 	}
 
@@ -830,9 +831,9 @@ sdioh_request_byte(sdioh_info_t *sd, uint rw, uint func, uint regaddr, uint8 *by
 			/* to allow abort command through F1 */
 			else if (regaddr == SDIOD_CCCR_IOABORT) {
 				/* Because of SDIO3.0 host issue on Manta,
-				 * sometimes the abort fails.
-				 * Retrying again will fix this issue.
-				 */
+				  * sometimes the abort fails.
+				  * Retrying again will fix this issue.
+				  */
 				while (sdio_abort_retry--) {
 					if (gInstance->func[func]) {
 						sdio_claim_host(gInstance->func[func]);
@@ -912,7 +913,7 @@ sdioh_request_word(sdioh_info_t *sd, uint cmd_type, uint rw, uint func, uint add
 	/* Claim host controller */
 	sdio_claim_host(gInstance->func[func]);
 
-	if(rw) { /* CMD52 Write */
+	if(rw) { /* CMD53 Write */
 		if (nbytes == 4) {
 			sdio_writel(gInstance->func[func], *word, addr, &err_ret);
 		} else if (nbytes == 2) {
@@ -972,6 +973,7 @@ sdioh_request_packet(sdioh_info_t *sd, uint fix_inc, uint write, uint func,
 	void *pnext, *pprev;
 	uint ttl_len, dma_len, lft_len, xfred_len, pkt_len;
 	uint blk_num;
+	int blk_size;
 	struct mmc_request mmc_req;
 	struct mmc_command mmc_cmd;
 	struct mmc_data mmc_dat;
@@ -987,12 +989,13 @@ sdioh_request_packet(sdioh_info_t *sd, uint fix_inc, uint write, uint func,
 	for (pnext = pkt; pnext; pnext = PKTNEXT(sd->osh, pnext))
 		ttl_len += PKTLEN(sd->osh, pnext);
 
-	if (!sd->use_rxchain || ttl_len <= sd->client_block_size[func]) {
+	blk_size = sd->client_block_size[func];
+	if (!sd->use_rxchain || ttl_len <= blk_size) {
 		blk_num = 0;
 		dma_len = 0;
 	} else {
-		blk_num = ttl_len / sd->client_block_size[func];
-		dma_len = blk_num * sd->client_block_size[func];
+		blk_num = ttl_len / blk_size;
+		dma_len = blk_num * blk_size;
 	}
 	lft_len = ttl_len - dma_len;
 
@@ -1033,7 +1036,7 @@ sdioh_request_packet(sdioh_info_t *sd, uint fix_inc, uint write, uint func,
 
 		mmc_dat.sg = sd->sg_list;
 		mmc_dat.sg_len = SGCount;
-		mmc_dat.blksz = sd->client_block_size[func];
+		mmc_dat.blksz = blk_size;
 		mmc_dat.blocks = blk_num;
 		mmc_dat.flags = write ? MMC_DATA_WRITE : MMC_DATA_READ;
 
@@ -1089,13 +1092,13 @@ sdioh_request_packet(sdioh_info_t *sd, uint fix_inc, uint write, uint func,
 			 */
 			if (write == 0 || pkt_len < 32)
 				pkt_len = (pkt_len + 3) & 0xFFFFFFFC;
-			else if (pkt_len % DHD_SDALIGN)
-				pkt_len += DHD_SDALIGN - (pkt_len % DHD_SDALIGN);
+			else if (pkt_len % blk_size)
+				pkt_len += blk_size - (pkt_len % blk_size);
 
-#if defined(CUSTOMER_HW4) && defined(DYNAMIC_F2_BLKSIZE_OF_PROPTXSTATUS)
+#if defined(CUSTOMER_HW4) && defined(USE_DYNAMIC_F2_BLKSIZE)
 			if (write && pkt_len > 64 && (pkt_len % 64) == 32)
 				pkt_len += 32;
-#endif /* CUSTOMER_HW4 && DYNAMIC_F2_BLKSIZE_OF_PROPTXSTATUS */
+#endif /* CUSTOMER_HW4 && USE_DYNAMIC_F2_BLKSIZE */
 #ifdef CONFIG_MMC_MSM7X00A
 			if ((pkt_len % 64) == 32) {
 				sd_trace(("%s: Rounding up TX packet +=32\n", __FUNCTION__));
