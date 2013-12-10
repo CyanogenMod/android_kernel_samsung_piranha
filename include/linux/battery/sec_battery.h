@@ -116,6 +116,10 @@ struct sec_battery_info {
 	/* temperature check */
 	int temperature;	/* battery temperature */
 	int temper_amb;		/* target temperature */
+#if defined(CONFIG_TARGET_LOCALE_CHN) || defined(CONFIG_TARGET_LOCALE_CHN_HKTW)
+	bool abnormal_temperature;
+	bool abnormal_temperature_amb;
+#endif
 
 	int temp_adc;
 

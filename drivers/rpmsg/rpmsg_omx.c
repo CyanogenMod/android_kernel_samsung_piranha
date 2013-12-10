@@ -465,6 +465,7 @@ long rpmsg_omx_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 	struct rpmsg_omx_service *omxserv = omx->omxserv;
 	char buf[48];
 	int ret = 0;
+	u8 reg_data = 0;
 
 	dev_dbg(omxserv->dev, "%s: cmd %d, arg 0x%lx\n", __func__, cmd, arg);
 
@@ -486,17 +487,32 @@ long rpmsg_omx_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 		/* make sure user input is null terminated */
 		buf[sizeof(buf) - 1] = '\0';
 
-		ret = max77693_write_reg(max77693_dummy->i2c, 0x00, 0x1f);  
-        ret = max77693_write_reg(max77693_dummy->i2c, 0x01, 0x1f);  
-        ret = max77693_write_reg(max77693_dummy->i2c, 0x02, 0x44);  
-        ret = max77693_write_reg(max77693_dummy->i2c, 0x03, 0x40);  
-        ret = max77693_write_reg(max77693_dummy->i2c, 0x04, 0x87);  
-        ret = max77693_write_reg(max77693_dummy->i2c, 0x05, 0x5a);  
-        ret = max77693_write_reg(max77693_dummy->i2c, 0x06, 0x80);  
-        ret = max77693_write_reg(max77693_dummy->i2c, 0x0A, 0x83);  
-        ret = max77693_write_reg(max77693_dummy->i2c, 0x0B, 0x50);  
-        ret = max77693_write_reg(max77693_dummy->i2c, 0x0D, 0x0d);  
-        ret = max77693_write_reg(max77693_dummy->i2c, 0x0F, 0xff);
+		ret = max77693_read_reg(max77693_dummy->i2c,
+					(unsigned int)0x10, &reg_data);
+		if (reg_data == 0) {
+			ret = max77693_write_reg(max77693_dummy->i2c,
+								0x00, 0x1f);
+			ret = max77693_write_reg(max77693_dummy->i2c,
+								0x01, 0x1f);
+			ret = max77693_write_reg(max77693_dummy->i2c,
+								0x02, 0x44);
+			ret = max77693_write_reg(max77693_dummy->i2c,
+								0x03, 0x40);
+			ret = max77693_write_reg(max77693_dummy->i2c,
+								0x04, 0x87);
+			ret = max77693_write_reg(max77693_dummy->i2c,
+								0x05, 0x5a);
+			ret = max77693_write_reg(max77693_dummy->i2c,
+								0x06, 0x80);
+			ret = max77693_write_reg(max77693_dummy->i2c,
+								0x0A, 0x83);
+			ret = max77693_write_reg(max77693_dummy->i2c,
+								0x0B, 0x50);
+			ret = max77693_write_reg(max77693_dummy->i2c,
+								0x0D, 0x0d);
+			ret = max77693_write_reg(max77693_dummy->i2c,
+								0x0F, 0xff);
+		}
 
 		ret = rpmsg_omx_connect(omx, buf);
 		break;
